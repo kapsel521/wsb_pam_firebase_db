@@ -2,21 +2,67 @@ package pl.mkonkel.wsb.firebasedb
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Message
+import android.widget.Button
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import kotlinx.android.synthetic.main.activity_main.*
+import pl.mkonkel.wsb.firebasedb.model.Note
+import timber.log.Timber
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
-//    TODO: Add FirebaseDatabase Instance here
     private val db = FirebaseDatabase.getInstance().reference
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//      TODO: Invoke listener created below
+        databadeListener()
+        button_add_note.setOnClickListener{
+            val title = note_title.text.toString()
+            val body = note_body.text.toString()
+            addNote(title, body)
+        }
+    }
 
-//      TODO: Add some UI handling here
-//      setOnClickListener() on the button
-//      then inside this listener get text from editText
+    private fun addNote(title: String?, message: String?) {
+        val note = Note(
+            title = title,
+            message = message
+        )
+
+        val uuid = UUID.randomUUID().toString()
+
+        db.child(NOTE)
+            .child(uuid)
+            .setValue(note)
+            .addOnSuccessListener {
+                Timber.i("succesfull note adding")
+            }
+            .addOnFailureListener {
+                Timber.e("Faliure during adding note")
+            }
+
+    }
+
+    private fun databadeListener(){
+        db.child(NOTE)
+            .addValueEventListener(
+                object : ValueEventListener{
+                    override fun onCancelled(p0: DatabaseError) {
+                        Timber.e("request was canceled")
+                    }
+
+                    override fun onDataChange(p0: DataSnapshot) {
+                    Timber.i( "something was changed")
+                    }
+
+                }
+            )
     }
 
 
@@ -35,4 +81,9 @@ class MainActivity : AppCompatActivity() {
 //    setValue(givenValue)
 //
 //    You can additional add onSuccess and onFailureListener
+
+
+    companion object{
+        const val NOTE = "note"
+    }
 }
